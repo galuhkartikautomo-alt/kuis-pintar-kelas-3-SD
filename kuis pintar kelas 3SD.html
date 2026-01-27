@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kuis Pintar Juara - Akses Terbatas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Nunito', sans-serif; background-color: #87CEEB; user-select: none; overflow: hidden; touch-action: manipulation; }
+        .sky-bg { background: linear-gradient(to bottom, #87CEEB 0%, #E0F7FA 100%); }
+        .grass-bg { background: #4CAF50; border-top: 8px solid #388E3C; }
+        .duo-button { transition: all 0.2s ease; box-shadow: 0 5px 0px rgba(0,0,0,0.1); }
+        .duo-button:active { transform: translateY(4px); box-shadow: 0 1px 0px rgba(0,0,0,0.1); }
+        .progress-fill { transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .floating { animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .cloud { position: absolute; background: white; border-radius: 50px; opacity: 0.8; animation: moveClouds 25s linear infinite; z-index: 0; }
+        @keyframes moveClouds { from { left: -150px; } to { left: 100%; } }
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-2 md:p-4">
+
+    <!-- Cloud Background -->
+    <div class="cloud w-32 h-10 top-10" style="animation-duration: 20s;"></div>
+    <div class="cloud w-48 h-12 top-40" style="animation-duration: 35s; animation-delay: -5s;"></div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="max-w-md w-full bg-white rounded-[2rem] p-8 shadow-2xl text-center z-20 border-8 border-white">
+        <div class="text-6xl mb-4">🔐</div>
+        <h1 class="text-2xl font-black text-gray-800 mb-2">Akses Terbatas</h1>
+        <p class="text-gray-500 mb-6 font-bold text-sm">Masukkan Kode Akses yang Anda dapatkan setelah pembelian di Lynk.id</p>
+        
+        <input type="text" id="pass-input" placeholder="Masukkan Kode Disini" 
+            class="w-full p-4 bg-gray-100 rounded-xl border-2 border-gray-200 text-center font-black text-xl mb-4 focus:border-blue-400 outline-none uppercase">
+        
+        <button onclick="checkPassword()" class="w-full py-4 bg-green-500 text-white font-black rounded-xl shadow-[0_4px_0_#2d7a31] active:translate-y-1 active:shadow-none transition-all">
+            BUKA GAME
+        </button>
+        <p id="error-msg" class="text-red-500 mt-4 font-bold hidden">Kode Salah! Silakan cek kembali.</p>
+    </div>
+
+    <!-- MAIN GAME CONTAINER (Hidden by Default) -->
+    <div id="game-container" class="hidden max-w-md w-full h-[90vh] flex flex-col bg-white rounded-[2rem] shadow-2xl relative overflow-hidden z-10 border-4 md:border-8 border-white">
+        
+        <!-- HEADER -->
+        <header id="header" class="hidden p-4 flex items-center justify-between bg-white z-20">
+            <button onclick="renderHome()" class="text-gray-400 hover:text-red-500 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <div class="flex-grow mx-4 h-4 bg-gray-100 rounded-full overflow-hidden border">
+                <div id="progress-bar" class="progress-fill h-full bg-green-500 w-0"></div>
+            </div>
+            <div class="flex items-center bg-red-50 px-3 py-1 rounded-full border border-red-100">
+                <span class="text-lg">❤️</span>
+                <span id="lives-count" class="font-black text-red-600 ml-1">5</span>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT AREA -->
+        <main id="main-content" class="p-6 flex-grow flex flex-col relative z-10 overflow-y-auto">
+            <!-- Content Injected Here -->
+        </main>
+
+        <!-- DECORATIVE GARDEN FOOTER -->
+        <div class="h-20 grass-bg relative overflow-hidden flex items-end justify-around pb-2">
+            <div class="text-4xl floating mb-2">🐰</div>
+            <div class="text-2xl mb-1">🌸</div>
+            <div class="text-3xl floating mb-3" style="animation-delay: 1s;">🌻</div>
+            <div class="text-4xl floating mb-2" style="animation-delay: 0.5s;">🐰</div>
+        </div>
+
+        <!-- FEEDBACK PANEL -->
+        <div id="feedback-panel" class="hidden absolute inset-x-0 bottom-0 p-6 z-50 transform translate-y-full transition-transform duration-300">
+            <div id="feedback-bg" class="rounded-t-3xl p-6 shadow-2xl border-t-4">
+                <div class="flex items-center mb-6">
+                    <div id="feedback-icon" class="text-4xl mr-4"></div>
+                    <div>
+                        <h2 id="feedback-text" class="text-xl font-black"></h2>
+                        <p id="correct-answer-text" class="text-sm font-bold opacity-80"></p>
+                    </div>
+                </div>
+                <button onclick="nextQuestion()" id="next-btn" class="w-full py-4 rounded-2xl text-white font-black text-xl duo-button">
+                    LANJUTKAN
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = { subject: null, difficulty: null, lives: 5, currentQuestionIdx: 0, questions: [], score: 0 };
+        
+        const quizData = {
+            'Matematika': {
+                'Mudah': [{q:"Berapakah hasil dari 25 + 15?", a:["30","40","45","50"], correct:1}, {q:"Bangun datar yang memiliki 3 sisi disebut?", a:["Persegi","Lingkaran","Segitiga","Trapesium"], correct:2}, {q:"Berapakah 10 dikali 3?", a:["13","30","300","20"], correct:1}, {q:"Angka 7 pada bilangan 742 menempati nilai tempat?", a:["Satuan","Puluhan","Ratusan","Ribuan"], correct:2}, {q:"Hasil dari 50 - 12 adalah?", a:["38","48","32","42"], correct:0}],
+                'Menengah': [{q:"Berapakah 12 x 5?", a:["50","60","70","80"], correct:1}, {q:"Hasil dari 120 + 80 - 50 adalah?", a:["150","100","200","250"], correct:0}, {q:"Ibu membeli 4 kotak telur, setiap kotak berisi 10 telur. Berapa total telur?", a:["14","40","44","400"], correct:1}, {q:"Berapakah hasil 100 : 4?", a:["20","25","30","50"], correct:1}, {q:"Sudut siku-siku besarnya?", a:["45°","180°","90°","60°"], correct:2}],
+                'Sulit': [{q:"Berapakah 15 x 4 + 20?", a:["60","80","100","70"], correct:1}, {q:"Bilangan loncat 5 setelah 125 adalah?", a:["120","135","130","140"], correct:2}, {q:"Satu jam ada berapa menit?", a:["12","60","100","3600"], correct:1}, {q:"Luas persegi dengan sisi 5 cm adalah?", a:["10 cm²","20 cm²","25 cm²","15 cm²"], correct:2}, {q:"250 gram sama dengan ... kg", a:["0.25","2.5","25","0.5"], correct:0}]
+            },
+            'Bahasa Inggris': {
+                'Mudah': [{q:"Apa bahasa Inggris dari 'Apel'?", a:["Grape","Apple","Orange","Banana"], correct:1}, {q:"How do you say 'Selamat Pagi'?", a:["Good Night","Good Afternoon","Good Morning","Goodbye"], correct:2}, {q:"I have two ... (mata)", a:["Ears","Nose","Eyes","Mouth"], correct:2}, {q:"What color is the sky?", a:["Green","Blue","Red","Yellow"], correct:1}, {q:"The number after 'Eight' is?", a:["Seven","Nine","Ten","Six"], correct:1}],
+                'Menengah': [{q:"They ... playing football.", a:["Is","Am","Are","Was"], correct:2}, {q:"What is the English word for 'Perpustakaan'?", a:["Canteen","Library","Classroom","Office"], correct:1}, {q:"An elephant is ... (besar)", a:["Small","Big","Thin","Short"], correct:1}, {q:"I ... to school every day.", a:["Go","Gone","Goes","Going"], correct:0}, {q:"Sunday, Monday, ... , Wednesday", a:["Friday","Thursday","Tuesday","Saturday"], correct:2}],
+                'Sulit': [{q:"The opposite of 'Fast' is?", a:["Quick","Slow","High","Long"], correct:1}, {q:"We smell with our...", a:["Eyes","Ears","Nose","Tongue"], correct:2}, {q:"Which one is a fruit?", a:["Carrot","Spinach","Mango","Potato"], correct:2}, {q:"He ... a doctor.", a:["Is","Are","Am","Be"], correct:0}, {q:"How many months in a year?", a:["Ten","Twelve","Eleven","Twenty"], correct:1}]
+            },
+            'Bahasa Indonesia': {
+                'Mudah': [{q:"Lawan kata 'Besar' adalah?", a:["Luas","Kecil","Tinggi","Lebar"], correct:1}, {q:"Tanda baca untuk mengakhiri kalimat berita adalah?", a:["Tanya","Seru","Titik","Koma"], correct:2}, {q:"Ibu memasak di...", a:["Kamar tidur","Halaman","Dapur","Ruang tamu"], correct:2}, {q:"Huruf kapital digunakan pada?", a:["Awal kalimat","Tengah kata","Akhir kalimat","Semua kata"], correct:0}, {q:"Persamaan kata 'Senang' adalah?", a:["Sedih","Marah","Gembira","Takut"], correct:2}],
+                'Menengah': [{q:"Subjek pada kalimat 'Budi makan nasi' adalah?", a:["Makan","Nasi","Budi","Nasi Goreng"], correct:2}, {q:"Matahari terbit di sebelah?", a:["Barat","Selatan","Timur","Utara"], correct:2}, {q:"Dongeng tentang hewan disebut?", a:["Legenda","Mite","Fabel","Sage"], correct:2}, {q:"Kata dasar dari 'Berlari' adalah?", a:["Lari","Berla","Larian","Terlari"], correct:0}, {q:"Antonim dari 'Rajin' adalah?", a:["Pintar","Malas","Giat","Pandai"], correct:1}],
+                'Sulit': [{q:"Kalimat yang memerlukan jawaban disebut kalimat?", a:["Perintah","Tanya","Berita","Ajakan"], correct:1}, {q:"Rangkaian peristiwa dalam cerita disebut?", a:["Tema","Latar","Alur","Tokoh"], correct:2}, {q:"Semboyan bangsa Indonesia adalah?", a:["Tut Wuri Handayani","Bhinneka Tunggal Ika","Pancasila","Merdeka"], correct:1}, {q:"Kancil adalah tokoh yang ... dalam dongeng.", a:["Bodoh","Malas","Cerdik","Jahat"], correct:2}, {q:"Kegiatan tanya jawab untuk mencari informasi disebut?", a:["Pidato","Diskusi","Wawancara","Ceramah"], correct:2}]
+            }
+        };
+
+        const main = document.getElementById('main-content');
+        const header = document.getElementById('header');
+        const livesEl = document.getElementById('lives-count');
+        const progressEl = document.getElementById('progress-bar');
+        const feedbackPanel = document.getElementById('feedback-panel');
+        const feedbackBg = document.getElementById('feedback-bg');
+        const feedbackText = document.getElementById('feedback-text');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const correctText = document.getElementById('correct-answer-text');
+
+        // PASSWORD LOGIC
+        function checkPassword() {
+            const input = document.getElementById('pass-input').value.toUpperCase();
+            const correctPass = "PINTAR2026"; // Password Anda
+            
+            if(input === correctPass) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('game-container').classList.remove('hidden');
+                renderHome();
+            } else {
+                const msg = document.getElementById('error-msg');
+                const card = document.getElementById('login-screen');
+                msg.classList.remove('hidden');
+                card.classList.add('shake');
+                setTimeout(() => card.classList.remove('shake'), 500);
+            }
+        }
+
+        // NAVIGATION LOGIC
+        function renderHome() {
+            header.classList.add('hidden');
+            feedbackPanel.classList.add('hidden');
+            main.innerHTML = `
+                <div class="text-center mb-6 animate-fadeIn">
+                    <div class="text-7xl mb-4 floating inline-block">🦉</div>
+                    <h1 class="text-3xl font-black text-gray-800">Kuis Pintar Juara</h1>
+                    <p class="text-gray-500 font-bold">Pilih petualanganmu hari ini!</p>
+                </div>
+                <div class="space-y-4">
+                    ${['Matematika', 'Bahasa Inggris', 'Bahasa Indonesia'].map(sub => `
+                        <button onclick="selectSubject('${sub}')" class="w-full p-5 text-left border-b-4 border-2 border-gray-200 rounded-3xl hover:bg-yellow-50 active:scale-95 transition-all bg-white flex items-center">
+                            <span class="text-4xl mr-4">${sub === 'Matematika' ? '🔢' : sub === 'Bahasa Inggris' ? '🇺🇸' : '🇮🇩'}</span>
+                            <span class="text-xl font-black text-gray-700">${sub}</span>
+                        </button>
+                    `).join('')}
+                </div>`;
+        }
+
+        function selectSubject(sub) { state.subject = sub; renderLevels(); }
+
+        function renderLevels() {
+            main.innerHTML = `
+                <div class="mb-6 flex items-center">
+                    <button onclick="renderHome()" class="mr-4 p-2 bg-gray-100 rounded-full">⬅️</button>
+                    <h1 class="text-2xl font-black text-gray-800">${state.subject}</h1>
+                </div>
+                <div class="space-y-4">
+                    ${['Mudah', 'Menengah', 'Sulit'].map((lv, i) => {
+                        const colors = ['bg-green-500 border-green-700', 'bg-orange-500 border-orange-700', 'bg-red-500 border-red-700'];
+                        return `
+                            <button onclick="startQuiz('${lv}')" class="w-full p-6 flex justify-between items-center text-white rounded-3xl duo-button ${colors[i]} border-b-4 active:scale-95">
+                                <span class="text-2xl font-black">${lv}</span>
+                                <span class="text-3xl">➔</span>
+                            </button>`;
+                    }).join('')}
+                </div>`;
+        }
+
+        function startQuiz(lv) {
+            state.difficulty = lv; state.lives = 5; state.currentQuestionIdx = 0; state.score = 0; state.questions = [...quizData[state.subject][lv]];
+            header.classList.remove('hidden'); updateUI(); renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = state.questions[state.currentQuestionIdx];
+            feedbackPanel.classList.add('hidden'); feedbackPanel.style.transform = "translateY(100%)";
+            main.innerHTML = `
+                <div class="flex-grow flex flex-col pt-4">
+                    <div class="mb-8 p-6 bg-blue-50 rounded-3xl border-2 border-blue-100 relative">
+                        <h2 class="text-2xl font-black text-blue-900 leading-tight">${q.q}</h2>
+                    </div>
+                    <div class="space-y-3">
+                        ${q.a.map((opt, i) => `
+                            <button onclick="checkAnswer(${i})" class="option-btn w-full p-4 text-left border-2 border-b-4 border-gray-200 rounded-2xl font-black text-gray-700 bg-white hover:bg-blue-50 active:scale-95 transition-all">
+                                <span class="inline-block w-8 h-8 mr-3 bg-gray-100 rounded-lg text-center leading-8 text-sm">${i + 1}</span>
+                                ${opt}
+                            </button>`).join('')}
+                    </div>
+                </div>`;
+        }
+
+        function checkAnswer(idx) {
+            const q = state.questions[state.currentQuestionIdx];
+            const isCorrect = idx === q.correct;
+            document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+            if (isCorrect) { state.score++; showFeedback(true); } 
+            else { state.lives--; showFeedback(false, q.a[q.correct]); }
+            updateUI();
+        }
+
+        function showFeedback(isCorrect, ans) {
+            feedbackPanel.classList.remove('hidden'); setTimeout(() => feedbackPanel.style.transform = "translateY(0)", 10);
+            if (isCorrect) {
+                feedbackBg.className = "rounded-t-3xl p-6 bg-green-500 text-white border-green-600";
+                feedbackText.innerText = "HEBAT! BENAR!"; feedbackIcon.innerHTML = "⭐"; correctText.innerText = "";
+                document.getElementById('next-btn').className = "w-full py-4 rounded-2xl text-green-700 font-black text-xl duo-button bg-white";
+            } else {
+                feedbackBg.className = "rounded-t-3xl p-6 bg-red-500 text-white border-red-600";
+                feedbackText.innerText = "WADUH, SALAH..."; feedbackIcon.innerHTML = "💡";
+                correctText.innerText = `Jawaban benar: ${ans}`;
+                document.getElementById('next-btn').className = "w-full py-4 rounded-2xl text-red-700 font-black text-xl duo-button bg-white";
+            }
+            if (state.lives <= 0) document.getElementById('next-btn').innerText = "LIHAT SKOR AKHIR";
+        }
+
+        function nextQuestion() {
+            if (state.lives <= 0) { renderGameOver(false); return; }
+            state.currentQuestionIdx++;
+            if (state.currentQuestionIdx >= state.questions.length) renderGameOver(true); else renderQuestion();
+        }
+
+        function updateUI() { livesEl.innerText = state.lives; progressEl.style.width = (state.currentQuestionIdx / state.questions.length * 100) + "%"; }
+
+        function renderGameOver(win) {
+            header.classList.add('hidden'); feedbackPanel.classList.add('hidden');
+            main.innerHTML = `
+                <div class="text-center py-4 flex flex-col items-center">
+                    <div class="text-8xl mb-4 floating">${win ? '👑' : '😅'}</div>
+                    <h2 class="text-4xl font-black text-gray-800">${win ? 'JUARA!' : 'COBA LAGI!'}</h2>
+                    <div class="w-full bg-blue-50 rounded-3xl p-6 my-6 border-4 border-blue-100">
+                        <div class="text-5xl font-black text-blue-600">${state.score * 20}</div>
+                        <div class="text-sm font-black text-gray-400 uppercase tracking-widest mt-2">Total Skor</div>
+                    </div>
+                    <button onclick="renderHome()" class="w-full py-4 rounded-2xl text-white font-black text-xl bg-green-500 border-b-4 border-green-700 duo-button">MAIN LAGI</button>
+                </div>`;
+        }
+    </script>
+</body>
+</html>
